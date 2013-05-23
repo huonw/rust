@@ -59,6 +59,7 @@ pub mod print {
 pub mod ext {
     pub mod asm;
     pub mod base;
+    pub mod do_notation;
     pub mod expand;
 
     pub mod quote;

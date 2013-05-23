@@ -196,6 +196,9 @@ pub fn syntax_expander_table() -> SyntaxEnv {
     syntax_expanders.insert(
         @~"trace_macros",
         builtin_normal_tt(ext::trace_macros::expand_trace_macros));
+    syntax_expanders.insert(
+        @~"do_",
+        builtin_normal_tt(ext::do_notation::expand_do));
     MapChain::new(~syntax_expanders)
 }
 

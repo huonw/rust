@@ -86,6 +86,7 @@ use self::distributions::range::SampleRange;
 
 pub mod distributions;
 pub mod isaac;
+pub mod mersenne_twister;
 pub mod os;
 pub mod reader;
 pub mod reseeding;
@@ -837,6 +838,7 @@ mod test {
 mod bench {
     use extra::test::BenchHarness;
     use rand::*;
+    use rand::mersenne_twister::*;
     use mem::size_of;
     use iter::range;
     use option::{Some, None};
@@ -868,6 +870,27 @@ mod bench {
     #[bench]
     fn rand_isaac64(bh: &mut BenchHarness) {
         let mut rng = Isaac64Rng::new();
+        do bh.iter {
+            for _ in range(0, N) {
+                rng.gen::<uint>();
+            }
+        }
+        bh.bytes = size_of::<uint>() as u64 * N;
+    }
+    #[bench]
+    fn rand_mt19937(bh: &mut BenchHarness) {
+        let mut rng = MT19937Rng::new();
+        do bh.iter {
+            for _ in range(0, N) {
+                rng.gen::<uint>();
+            }
+        }
+        bh.bytes = size_of::<uint>() as u64 * N;
+    }
+
+    #[bench]
+    fn rand_mt19937_64(bh: &mut BenchHarness) {
+        let mut rng = MT19937_64Rng::new();
         do bh.iter {
             for _ in range(0, N) {
                 rng.gen::<uint>();

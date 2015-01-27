@@ -12,6 +12,9 @@
 
 extern crate no_method_suggested_traits;
 
+struct Foo;
+enum Bar { X }
+
 mod foo {
     trait Bar {
         fn method(&self) {}
@@ -41,7 +44,7 @@ fn main() {
     //~^^ HELP the following trait is implemented but not in scope, perhaps add a `use` for it:
     //~^^^ HELP `no_method_suggested_traits::foo::PubPub`
 
-    1u64.method();
+    Foo.method();
     //~^ ERROR does not implement
     //~^^ HELP following traits define a method `method`, perhaps you need to implement one of them
     //~^^^ HELP `foo::Bar`
@@ -55,8 +58,27 @@ fn main() {
     //~^ ERROR does not implement
     //~^^ HELP the following trait defines a method `method2`, perhaps you need to implement it
     //~^^^ HELP `foo::Bar`
-    1u64.method3();
+
+    no_method_suggested_traits::Foo.method2();
     //~^ ERROR does not implement
-    //~^^ HELP the following trait defines a method `method3`, perhaps you need to implement it
+    //~^^ HELP following trait defines a method `method2`, perhaps you need to implement it
+    //~^^^ HELP `foo::Bar`
+    no_method_suggested_traits::Bar::X.method2();
+    //~^ ERROR does not implement
+    //~^^ HELP following trait defines a method `method2`, perhaps you need to implement it
+    //~^^^ HELP `foo::Bar`
+
+    Foo.method3();
+    //~^ ERROR does not implement
+    //~^^ HELP following trait defines a method `method3`, perhaps you need to implement it
     //~^^^ HELP `no_method_suggested_traits::foo::PubPub`
+    Bar::X.method3();
+    //~^ ERROR does not implement
+    //~^^ HELP following trait defines a method `method3`, perhaps you need to implement it
+    //~^^^ HELP `no_method_suggested_traits::foo::PubPub`
+
+    // should have no help:
+    1us.method3(); //~ ERROR does not implement
+    no_method_suggested_traits::Foo.method3();  //~ ERROR does not implement
+    no_method_suggested_traits::Bar::X.method3();  //~ ERROR does not implement
 }

@@ -34,6 +34,11 @@ pub fn report_error<'a, 'tcx>(fcx: &FnCtxt<'a, 'tcx>,
                               method_name: ast::Name,
                               error: MethodError)
 {
+    // avoid suggestions when we don't know what's going on.
+    if ty::type_is_error(rcvr_ty) {
+        return
+    }
+
     match error {
         MethodError::NoMatch(static_sources, out_of_scope_traits) => {
             let cx = fcx.tcx();
@@ -135,7 +140,7 @@ pub type AllTraitsVec = Vec<TraitInfo>;
 
 fn suggest_traits_to_import<'a, 'tcx>(fcx: &FnCtxt<'a, 'tcx>,
                                       span: Span,
-                                      _rcvr_ty: Ty<'tcx>,
+                                      rcvr_ty: Ty<'tcx>,
                                       method_name: ast::Name,
                                       valid_out_of_scope_traits: Vec<ast::DefId>)
 {
@@ -165,9 +170,40 @@ fn suggest_traits_to_import<'a, 'tcx>(fcx: &FnCtxt<'a, 'tcx>,
         return
     }
 
-    // there's no implemented traits, so lets suggest some traits to implement
+    let type_is_local = match rcvr_ty.sty {
+        ty::ty_enum(did, _) | ty::ty_struct(did, _) => ast_util::is_local(did),
+
+        ty::ty_trait(ref tr) => ast_util::is_local(tr.principal_def_id()),
+
+        // these presumably just need to be bounded appropriately
+        // FIXME #21673 the help message could be tuned to this case.
+        ty::ty_param(_) => true,
+
+        // the user cannot implement traits for unboxed closures, so
+        // there's no point suggesting anything at all, local or not.
+        ty::ty_unboxed_closure(..) => return,
+
+        // everything else (primitive types etc.) is effectively
+        // non-local (there are "edge" cases, e.g. (LocalType,), but
+        // the noise from these sort of types is usually just really
+        // annoying, rather than any sort of help).
+        _ => false
+    };
+
+    // there's no implemented traits, so lets suggest some traits to
+    // implement, by finding ones that have the method name, and are
+    // legal to implement.
     let mut candidates = all_traits(fcx.ccx)
-        .filter(|info| trait_method(tcx, info.def_id, method_name).is_some())
+        .filter(|info| {
+            // we approximate the coherence rules to only suggest
+            // traits that are legal to implement by requiring that
+            // either the type or trait is local. Multidispatch means
+            // this isn't perfect (that is, there are cases when
+            // implementing a trait would be legal but is rejected
+            // here).
+            (type_is_local || ast_util::is_local(info.def_id))
+                && trait_method(tcx, info.def_id, method_name).is_some()
+        })
         .collect::<Vec<_>>();
 
     if candidates.len() > 0 {

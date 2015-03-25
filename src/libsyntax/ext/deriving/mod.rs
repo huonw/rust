@@ -13,7 +13,7 @@
 //! FIXME (#2810): hygiene. Search for "__" strings (in other files too). We also assume "extra" is
 //! the standard library, and "std" is the core library.
 
-use ast::{Item, MetaItem, MetaWord};
+use ast::{Item, MetaItem, MetaWord, MetaList, MetaNameValue};
 use attr::AttrMetaMethods;
 use ext::base::{ExtCtxt, SyntaxEnv, Decorator, ItemDecorator, Modifier};
 use ext::build::AstBuilder;
@@ -65,6 +65,7 @@ pub mod rand;
 pub mod show;
 pub mod default;
 pub mod primitive;
+pub mod from;
 
 #[path="cmp/eq.rs"]
 pub mod eq;
@@ -77,6 +78,9 @@ pub mod totalord;
 
 
 pub mod generic;
+
+// traits that can be used like `#[derive(Foo(...))]`.
+const TRAITS_WITH_ARGS: &'static [&'static str] = &["From"];
 
 fn expand_derive(cx: &mut ExtCtxt,
                  _: Span,
@@ -95,6 +99,8 @@ fn expand_derive(cx: &mut ExtCtxt,
         for titem in traits.iter().rev() {
             let tname = match titem.node {
                 MetaWord(ref tname) => tname,
+                // #[derive(Foo(...))] is only legal for specific traits
+                MetaList(ref tname, _) if TRAITS_WITH_ARGS.contains(&&**tname) => tname,
                 _ => {
                     cx.span_err(titem.span, "malformed `derive` entry");
                     continue;
@@ -109,9 +115,16 @@ fn expand_derive(cx: &mut ExtCtxt,
                 continue;
             }
 
-            // #[derive(Foo, Bar)] expands to #[derive_Foo] #[derive_Bar]
-            item.attrs.push(cx.attribute(titem.span, cx.meta_word(titem.span,
-                intern_and_get_ident(&format!("derive_{}", tname)))));
+            // #[derive(Foo, Bar(...))] expands to #[derive_Foo] #[derive_Bar(...)]
+            let attr_span = titem.span;
+            let attr_name = intern_and_get_ident(&format!("derive_{}", tname));
+            let meta = match titem.node {
+                MetaWord(_) => cx.meta_word(attr_span, attr_name),
+                MetaList(_, ref args) => cx.meta_list(attr_span, attr_name, args.clone()),
+                MetaNameValue(_, ref value) => cx.meta_name_value(attr_span, attr_name,
+                                                                  value.node.clone())
+            };
+            item.attrs.push(cx.attribute(titem.span, meta));
         }
 
         item
@@ -175,6 +188,8 @@ derive_traits! {
     "Default" => default::expand_deriving_default,
 
     "FromPrimitive" => primitive::expand_deriving_from_primitive,
+    "From" => from::expand_deriving_from,
+
 
     "Send" => bounds::expand_deriving_unsafe_bound,
     "Sync" => bounds::expand_deriving_unsafe_bound,

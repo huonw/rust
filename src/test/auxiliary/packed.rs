@@ -8,6 +8,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![feature(repr_packed)]
+
 #[repr(packed)]
 pub struct S {
     a: u8,

@@ -74,6 +74,7 @@
 
 #![allow(unused_variables)]
 #![omit_gdb_pretty_printer_section]
+#![feature(repr_packed)]
 
 #[repr(packed)]
 struct Packed {

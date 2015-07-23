@@ -8,6 +8,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![feature(repr_packed)]
+
 #[repr(packed)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 struct Foo {

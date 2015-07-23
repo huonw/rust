@@ -15,6 +15,8 @@
 
 // error-pattern: transmute called on types with different size
 
+#![feature(repr_packed)]
+
 use std::mem;
 
 #[repr(packed)]

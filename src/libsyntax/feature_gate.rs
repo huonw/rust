@@ -158,6 +158,9 @@ const KNOWN_FEATURES: &'static [(&'static str, &'static str, Status)] = &[
 
     // Allows using #[prelude_import] on glob `use` items.
     ("prelude_import", "1.2.0", Active),
+
+    // Allows use of repr(packed)
+    ("repr_packed", "1.3.0", Active),
 ];
 // (changing above list without updating src/doc/reference.md makes @cmr sad)
 
@@ -563,6 +566,17 @@ impl<'a, 'v> Visitor<'v> for PostExpansionVisitor<'a> {
                 if attr::contains_name(&i.attrs[..], "simd") {
                     self.gate_feature("simd", i.span,
                                       "SIMD types are experimental and possibly buggy");
+                }
+
+                for attr in &i.attrs {
+                    if attr.name() == "repr" {
+                        for item in attr.meta_item_list().unwrap_or(&[]) {
+                            if item.name() == "packed" {
+                                self.gate_feature("repr_packed", item.span,
+                                                  "packed types are experimental and buggy");
+                            }
+                        }
+                    }
                 }
             }
 

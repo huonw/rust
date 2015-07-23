@@ -9,6 +9,8 @@
 // except according to those terms.
 
 
+#![feature(repr_packed)]
+
 #[repr(packed)]
 struct Foo {
     bar: u8,

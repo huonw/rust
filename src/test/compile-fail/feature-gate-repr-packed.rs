@@ -8,15 +8,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(repr_packed)]
-#![deny(unused_attributes)]
 
-#[repr(C)]
-#[repr(packed)]
-pub struct Foo;
+#[repr(packed)] //~ ERROR packed types are experimental
+struct Foo { x: u8 }
+#[repr(packed, C)] //~ ERROR packed types are experimental
+struct Bar { x: u8 }
+#[repr(C, packed)] //~ ERROR packed types are experimental
+struct Baz { x: u8 }
 
-#[repr(packed)]
-#[repr(C)]
-pub struct Bar;
-
-fn main() { }
+fn main() {}

@@ -65,6 +65,7 @@
 
 #![allow(unused_variables)]
 #![omit_gdb_pretty_printer_section]
+#![feature(repr_packed)]
 
 use self::AnEnum::{OneHundred, OneThousand, OneMillion};
 use self::AnotherEnum::{MountainView, Toronto, Vienna};

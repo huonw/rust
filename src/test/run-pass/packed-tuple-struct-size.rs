@@ -10,6 +10,8 @@
 
 
 
+#![feature(repr_packed)]
+
 use std::mem;
 
 #[repr(packed)]

@@ -209,6 +209,12 @@ LLVMRustRunFunctionPassManager(LLVMPassManagerRef PM, LLVMModuleRef M) {
 }
 
 extern "C" void
+LLVMRustAddSampleProfileLoaderPass(LLVMPassManagerRef PM, const char *path) {
+    FunctionPassManager *P = unwrap<FunctionPassManager>(PM);
+    P->add(createSampleProfileLoaderPass(path));
+}
+
+extern "C" void
 LLVMRustSetLLVMOptions(int Argc, char **Argv) {
     // Initializing the command-line options more than once is not allowed. So,
     // check if they've already been initialized.  (This could happen if we're

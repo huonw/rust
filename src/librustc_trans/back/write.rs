@@ -325,6 +325,8 @@ struct CodegenContext<'a> {
     plugin_passes: Vec<String>,
     // LLVM optimizations for which we want to print remarks.
     remark: Passes,
+    // File containing sample data from profiling
+    sample_profile_file: Option<String>,
 }
 
 impl<'a> CodegenContext<'a> {
@@ -334,6 +336,7 @@ impl<'a> CodegenContext<'a> {
             handler: sess.diagnostic().handler(),
             plugin_passes: sess.plugin_llvm_passes.borrow().clone(),
             remark: sess.opts.cg.remark.clone(),
+            sample_profile_file: sess.opts.cg.sample_profile.clone()
         }
     }
 }
@@ -449,6 +452,12 @@ unsafe fn optimize_and_codegen(cgcx: &CodegenContext,
         };
 
         if !config.no_verify { assert!(addpass("verify")); }
+
+        if let Some(ref sample_profile) = cgcx.sample_profile_file {
+            let file = CString::new(&sample_profile[..]).unwrap();
+            // this goes first: need the info for the later passes.
+            llvm::LLVMRustAddSampleProfileLoaderPass(fpm, file.into_raw())
+        }
         if !config.no_prepopulate_passes {
             llvm::LLVMRustAddAnalysisPasses(tm, fpm, llmod);
             llvm::LLVMRustAddAnalysisPasses(tm, mpm, llmod);
@@ -854,6 +863,7 @@ fn run_work_multithreaded(sess: &Session,
         let diag_emitter = diag_emitter.clone();
         let plugin_passes = sess.plugin_llvm_passes.borrow().clone();
         let remark = sess.opts.cg.remark.clone();
+        let sample_profile_file = sess.opts.cg.sample_profile.clone();
 
         let (tx, rx) = channel();
         let mut tx = Some(tx);
@@ -869,6 +879,7 @@ fn run_work_multithreaded(sess: &Session,
                 handler: &diag_handler,
                 plugin_passes: plugin_passes,
                 remark: remark,
+                sample_profile_file: sample_profile_file,
             };
 
             loop {

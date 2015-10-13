@@ -2062,6 +2062,7 @@ extern {
     pub fn LLVMRustAddLibraryInfo(PM: PassManagerRef, M: ModuleRef,
                                   DisableSimplifyLibCalls: bool);
     pub fn LLVMRustRunFunctionPassManager(PM: PassManagerRef, M: ModuleRef);
+    pub fn LLVMRustAddSampleProfileLoaderPass(PM: PassManagerRef, Path: *const c_char);
     pub fn LLVMRustWriteOutputFile(T: TargetMachineRef,
                                    PM: PassManagerRef,
                                    M: ModuleRef,

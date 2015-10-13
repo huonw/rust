@@ -513,6 +513,8 @@ options! {CodegenOptions, CodegenSetter, basic_codegen_options,
         "Optimize with possible levels 0-3"),
     debug_assertions: Option<bool> = (None, parse_opt_bool,
         "explicitly enable the cfg(debug_assertions) directive"),
+    sample_profile: Option<String> = (None, parse_opt_string,
+         "file containing profiling data to guide optimisations"),
 }
 
 
